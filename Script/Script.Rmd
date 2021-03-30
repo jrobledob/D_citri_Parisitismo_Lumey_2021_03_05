@@ -1,0 +1,242 @@
+---
+title: "Parasitismo"
+author: "Lumey Pérez Artiles"
+date: "25/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "D:/OneDrive - AGROSAVIA - CORPORACION COLOMBIANA DE INVESTIGACION AGROPECUARIA/R_scripts/D_citri_Parisitismo_Lumey_2021_03_05/")
+```
+## 1. Librerías
+
+```{r libreria, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(agricolae)
+library(dplyr)
+library(tidyverse)
+```
+
+
+## 2. Lectura de los datos
+```{r read_data}
+datos<- read.csv2("./Data/DEF_30_03_2021.csv", encoding = "UTF-8")
+head(datos)
+```
+## 3. Limpieza de los datos
+```{r cleaning_data}
+datos<- datos[c("MUESTREO", "TRATAMIENTO", "NINFAS.BROTE.CAMPO","NINFAS.PARASITADAS.DÍA.6")]
+head(datos)
+tail(datos)
+```
+## 4. Cálculos del porcentaje de parasitismo
+
+Se calcula dicidiendo el total de ninfas parasitadas entre el total de ninfas presentes al momento de la evaluación. Se elimina adicionalmente los valores ausentes que no se corresponden a números como 0/0 o un númeor dividido entre 0.
+```{r parasitism}
+datos$`Parasitismo (%)`<- round((datos$NINFAS.PARASITADAS.DÍA.6/datos$NINFAS.BROTE.CAMPO)*100, 2)
+head(datos)
+tail(datos)
+datos<- datos[!is.na(datos$`Parasitismo (%)`),]
+datos<- datos[datos$`Parasitismo (%)`!=Inf,]
+head(datos)
+tail(datos)
+```
+
+## 5. Kruskall Wallis 
+
+### 5.1.1 Comparación de tratamientos en muestreo MPost1 
+
+SOLO HAY UNA DENSIDAD. En este caso como solo habría dos tratamientos para comparar el test Kruskal-Wallis es equivalente al test Mann-Whitney
+
+```{r kw_MPost1}
+datosMpost1<-filter(datos, MUESTREO== "MPost1")
+#Boxplot
+ggplot(data = datosMpost1, mapping = aes(x = TRATAMIENTO, y = `Parasitismo (%)`, colour = TRATAMIENTO))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMpost1, mapping = aes(x = `Parasitismo (%)`, colour = TRATAMIENTO)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ TRATAMIENTO) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_Mpost1<- kruskal(datosMpost1$`Parasitismo (%)`, datosMpost1$TRATAMIENTO,group=TRUE, p.adj = "bonferroni")
+group_Mpost1
+```
+
+### 5.2.1 Comparación de tratamientos en muestreo MPost2 
+
+
+```{r kW_MPost2_tratamientos}
+datosMPost2<-filter(datos, MUESTREO== "MPost2")
+#Boxplot
+ggplot(data = datosMPost2, mapping = aes(x = TRATAMIENTO, y = `Parasitismo (%)`, colour = TRATAMIENTO))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution 
+ ggplot(data = datosMPost2, mapping = aes(x = `Parasitismo (%)`, colour = TRATAMIENTO)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ TRATAMIENTO) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost2<- kruskal(datosMPost2$`Parasitismo (%)`, datosMPost2$TRATAMIENTO,group=TRUE, p.adj = "bonferroni")
+group_MPost2
+```
+
+### 5.2.2 Comparación de Densidades en muestreo MPost2 
+
+
+```{r kW_MPost2_densidades}
+datosMPost2<- datosMPost2 %>% separate(TRATAMIENTO, c("Densidad", "Confinamiento"), sep = 1)
+#Boxplot
+ggplot(data = datosMPost2, mapping = aes(x = Densidad, y = `Parasitismo (%)`, colour = Densidad))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPost2, mapping = aes(x = `Parasitismo (%)`, colour = Densidad)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ Densidad) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost2<- kruskal(datosMPost2$`Parasitismo (%)`, datosMPost2$Densidad,group=TRUE, p.adj = "bonferroni")
+group_MPost2
+```
+
+### 5.2.3 Comparación de confinamiento en muestreo MPost2 
+
+En este caso como solo habría dos tratamientos para comparar el test Kruskal-Wallis es equivalente al test Mann-Whitney
+
+
+```{r kW_MPost2_confinamiento}
+#Boxplot
+ggplot(data = datosMPost2, mapping = aes(x = Confinamiento, y = `Parasitismo (%)`, colour = Confinamiento))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPost2, mapping = aes(x = `Parasitismo (%)`, colour = Confinamiento)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ Confinamiento) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost2<- kruskal(datosMPost2$`Parasitismo (%)`, datosMPost2$Confinamiento,group=TRUE, p.adj = "bonferroni")
+group_MPost2
+```
+
+
+### 5.3.1 Comparación de tratamientos en muestreo MPost3 
+
+```{r kW_MPost3}
+datosMPost3<-filter(datos, MUESTREO== "MPost3")
+#Boxplot
+ggplot(data = datosMPost3, mapping = aes(x = TRATAMIENTO, y = `Parasitismo (%)`, colour = TRATAMIENTO))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPost3, mapping = aes(x = `Parasitismo (%)`, colour = TRATAMIENTO)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ TRATAMIENTO) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost3<- kruskal(datosMPost3$`Parasitismo (%)`, datosMPost3$TRATAMIENTO,group=TRUE, p.adj = "bonferroni")
+group_MPost3
+```
+
+### 5.3.2 Comparación de Densidades en muestreo MPost3 
+
+
+```{r kW_MPost3_densidades}
+datosMPost3<- datosMPost3 %>% separate(TRATAMIENTO, c("Densidad", "Confinamiento"), sep = 1)
+#Boxplot
+ggplot(data = datosMPost3, mapping = aes(x = Densidad, y = `Parasitismo (%)`, colour = Densidad))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPost3, mapping = aes(x = `Parasitismo (%)`, colour = Densidad)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ Densidad) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost3<- kruskal(datosMPost3$`Parasitismo (%)`, datosMPost3$Densidad,group=TRUE, p.adj = "bonferroni")
+group_MPost3
+```
+
+### 5.3.3 Comparación de confinamiento en muestreo MPost3 
+
+En este caso como solo habría dos tratamientos para comparar el test Kruskal-Wallis es equivalente al test Mann-Whitney
+
+```{r kW_MPost3_confinamiento}
+#Boxplot
+ggplot(data = datosMPost3, mapping = aes(x = Confinamiento, y = `Parasitismo (%)`, colour = Confinamiento))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPost3, mapping = aes(x = `Parasitismo (%)`, colour = Confinamiento)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ Confinamiento) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost3<- kruskal(datosMPost3$`Parasitismo (%)`, datosMPost3$Confinamiento,group=TRUE, p.adj = "bonferroni")
+group_MPost3
+```
+
+
+### 5.4 Comparación entre muestreos del tipo MPost 
+
+
+```{r kW_MPost}
+datosMPost<- datos[which(grepl("MPost", datos$MUESTREO)),]
+#Boxplot
+ggplot(data = datosMPost, mapping = aes(x = MUESTREO, y = `Parasitismo (%)`, colour = MUESTREO))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPost, mapping = aes(x = `Parasitismo (%)`, colour = MUESTREO)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ MUESTREO) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPost<- kruskal(datosMPost$`Parasitismo (%)`, datosMPost$MUESTREO,group=TRUE, p.adj = "bonferroni")
+group_MPost
+```
+
+
+
+### 5.5 Comparación entre muestreos del tipo MPrev 
+
+
+```{r kW_MPrev}
+datosMPrev<- datos[which(grepl("MPrev", datos$MUESTREO)),]
+#Boxplot
+ggplot(data = datosMPrev, mapping = aes(x = MUESTREO, y = `Parasitismo (%)`, colour = MUESTREO))+
+  geom_boxplot() +
+  theme_bw() +
+  theme(legend.position = "none")
+#Distribution PUNTO
+ ggplot(data = datosMPrev, mapping = aes(x = `Parasitismo (%)`, colour = MUESTREO)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_grid(. ~ MUESTREO) +
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 45))
+group_MPrev<- kruskal(datosMPrev$`Parasitismo (%)`, datosMPrev$MUESTREO,group=TRUE, p.adj = "bonferroni")
+group_MPrev
+```
+
+
